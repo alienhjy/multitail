@@ -1,23 +1,20 @@
 package main
 
 import (
+//	"bufio"
 	"fmt"
 	"log"
-	"sync"
-	"bufio"
-	"github.com/droyo/tailpipe"
+//	"sync"
+
+//	"github.com/droyo/tailpipe"
 )
 
-type TailNode struct {
-	r *tailpipe.File
-	enabled bool
-}
-
 func main() {
+	/*
 	var (
-		logFiles map[string]TailNode = make(map[string]TailNode)
-		wg sync.WaitGroup
-		err error
+		logFiles = make(map[string]TailNode)
+		wg       sync.WaitGroup
+		err      error
 	)
 	logFiles["pacman.log1"] = TailNode{enabled: true}
 	logFiles["pacman.log2"] = TailNode{enabled: true}
@@ -26,17 +23,18 @@ func main() {
 		if logFile.enabled == false {
 			continue
 		}
-		logFile.r, err = tailpipe.Open(name)
+		logFile.tf, err = tailpipe.Open(name)
 		if err != nil {
 			log.Println(err)
 		}
 		wg.Add(1)
+		tf := logFile.tf
 		go func() {
 			defer func() {
-				logFile.r.Close()
+				tf.Close()
 				wg.Done()
 			}()
-			scanner := bufio.NewScanner(logFile.r)
+			scanner := bufio.NewScanner(tf)
 			for scanner.Scan() {
 				fmt.Println(string(scanner.Bytes()))
 				//os.Stdout.Write(scanner.Bytes())
@@ -45,6 +43,11 @@ func main() {
 	}
 
 	wg.Wait()
+	*/
+	fileList := treeDir(".", ".go$")
+	for _, name := range fileList {
+		fmt.Println(name)
+	}
 	log.Println("DEBUG: exit...")
 	return
 }
