@@ -39,16 +39,18 @@ func treeDir(path string, reg string) []string {
 // LogPool : Manage all log "tail" node.
 type LogPool struct {
 	logFiles map[string]*TailNode
-	logPaths []string
-	namePattern string
-	wg       sync.WaitGroup
+	logPaths map[string]bool
+//	namePattern string
+	wg       *sync.WaitGroup
 }
 
-// Init : Init log pool.
-func (slf *LogPool) Init(namePattern string) {
-	slf.logFiles = make(map[string]*TailNode)
-	slf.logPaths = make([]string, 0, 16)
-	slf.namePattern = namePattern
+// NewLogPool create a new pool and return its point.
+func NewLogPool() *LogPool {
+	pool := new(LogPool)
+	pool.logFiles = make(map[string]*TailNode)
+	pool.logPaths = make(map[string]bool)
+	pool.wg = new(sync.WaitGroup)
+	return pool
 }
 
 // AddOne add a tail_node to pool.
@@ -71,15 +73,15 @@ func (slf *LogPool) AddOne(name string) error {
 }
 
 // AddPath add a path to pool, and listen change of this path.
-func (slf *LogPool) AddPath(path string) {
+func (slf *LogPool) AddPath(path string, pattern string) {
 	path, _ = filepath.Abs(path)
-	for _, log_path := range slf.logPaths {
-		if path == log_path {
-			return
-		}
+	if _, exist := slf.logPaths[path]; exist {
+		log.Println(path + " is existed in path list.")
+		return
 	}
-	slf.logPaths = append(slf.logPaths, path)
-	names := treeDir(name, slf.namePattern)
+	slf.logPaths[path] = true
+
+	names := treeDir(path, pattern)
 	for _, name := range names {
 		slf.AddOne(name)
 	}
@@ -101,16 +103,33 @@ func (slf *LogPool) DeleteOne(name string) {
 // DeletePath delete a path from LogPool,
 // and try remove sub entry of it.
 func (slf *LogPool) DeletePath(path string) {
+	if _, exist := slf.logPaths[path]; !exist {
+		log.Println(path + " is not existed in path list.")
+		return
+	}
+	slf.logPaths[path] = false
+
+	// delete all file node under this path.
+	// TODO: this implement must be improved.
+	for name, _ := range slf.logFiles {
+		matched, err := regexp.MatchString(path, name)
+		if matched == true || err == nil {
+			slf.DeleteOne(name)
+		}
+	}
 	return
 }
 
 // StartAll tail process.
 func (slf *LogPool) StartAll() {
+	for _, node := range slf.logFiles {
+		node.Start(slf.wg)
+	}
 	return
 }
 
 // WaitGroup wait all of node exit.
-func (slf *LogPool) WaitGroup() {
+func (slf *LogPool) WaitAll() {
 	slf.wg.Wait()
 	return
 }

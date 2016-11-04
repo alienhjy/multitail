@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"log"
 	"fmt"
 	"sync"
 
@@ -36,6 +37,8 @@ func (slf *TailNode) Start(wg *sync.WaitGroup) error {
 	slf.running = true
 	go func() {
 		defer func() {
+			// DEBUG:
+			log.Println(slf.path + "exit...")
 			slf.tf.Close()
 			slf.running = false
 			slf.done <- true
@@ -43,6 +46,9 @@ func (slf *TailNode) Start(wg *sync.WaitGroup) error {
 		}()
 		scanner := bufio.NewScanner(slf.tf)
 		for scanner.Scan() {
+			/*
+			fmt.Println(string(scanner.Bytes()))
+			*/
 			select {
 			case <-slf.quit:
 				// TODO: Do something before quit.
