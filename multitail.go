@@ -1,8 +1,6 @@
 package main
 
 import (
-//	"bufio"
-	"fmt"
 	"log"
 //	"sync"
 
@@ -13,7 +11,7 @@ func main() {
 	defer log.Println("DEBUG: exit...")
 	fileList := treeDir(".", ".log\\d")
 	for _, name := range fileList {
-		fmt.Println(name)
+		log.Println(name)
 	}
 	pool := NewLogPool()
 	pool.AddPath(".", ".log\\d")
